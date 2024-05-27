@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+
 	domainApp "github.com/aldinokemal/go-whatsapp-web-multidevice/domains/app"
 	"github.com/aldinokemal/go-whatsapp-web-multidevice/pkg/utils"
 	"github.com/gofiber/fiber/v2"
@@ -17,6 +18,7 @@ func InitRestApp(app *fiber.App, service domainApp.IAppService) App {
 	app.Get("/app/logout", rest.Logout)
 	app.Get("/app/reconnect", rest.Reconnect)
 	app.Get("/app/devices", rest.Devices)
+	app.Post("/app/pair", rest.Pair)
 
 	return App{Service: service}
 }
@@ -69,5 +71,21 @@ func (handler *App) Devices(c *fiber.Ctx) error {
 		Code:    "SUCCESS",
 		Message: "Fetch device success",
 		Results: devices,
+	})
+}
+
+func (handler *App) Pair(c *fiber.Ctx) error {
+	var request domainApp.PairRequest
+	err := c.BodyParser(&request)
+	utils.PanicIfNeeded(err)
+
+	response, err := handler.Service.Pair(c.UserContext(), request)
+	utils.PanicIfNeeded(err)
+
+	return c.JSON(utils.ResponseData{
+		Status:  200,
+		Code:    "SUCCESS",
+		Message: "Pair success",
+		Results: response,
 	})
 }

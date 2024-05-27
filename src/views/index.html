@@ -44,6 +44,7 @@
         <app-login></app-login>
         <app-logout @reload-devices="handleReloadDevice"></app-logout>
         <app-reconnect @reload-devices="handleReloadDevice"></app-reconnect>
+        <app-pair></app-pair>
     </div>
 
     <div class="ui horizontal divider">
@@ -146,6 +147,7 @@
     import AccountAvatar from "./components/AccountAvatar.js";
     import AccountUserInfo from "./components/AccountUserInfo.js";
     import AccountPrivacy from "./components/AccountPrivacy.js";
+    import AppPair from "./components/AppPair.js";
 
     const showErrorInfo = (message) => {
         $('body').toast({
@@ -168,7 +170,7 @@
 
     Vue.createApp({
         components: {
-            AppLogin, AppLogout, AppReconnect,
+            AppLogin, AppLogout, AppReconnect, AppPair,
             SendMessage, SendImage, SendFile, SendVideo, SendContact, SendLocation, SendAudio, SendPoll,
             MessageUpdate, MessageReact, MessageRevoke,
             GroupList, GroupCreate, GroupJoinWithLink, GroupAddParticipants,

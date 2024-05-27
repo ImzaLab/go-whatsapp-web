@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/aldinokemal/go-whatsapp-web-multidevice/config"
 	domainApp "github.com/aldinokemal/go-whatsapp-web-multidevice/domains/app"
 	pkgError "github.com/aldinokemal/go-whatsapp-web-multidevice/pkg/error"
+	"github.com/aldinokemal/go-whatsapp-web-multidevice/validations"
 	fiberUtils "github.com/gofiber/fiber/v2/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/libsignal/logger"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 type serviceApp struct {
@@ -181,6 +183,34 @@ func (service serviceApp) FetchDevices(_ context.Context) (response []domainApp.
 
 		response = append(response, d)
 	}
+
+	return response, nil
+}
+
+func (service serviceApp) Pair(ctx context.Context, request domainApp.PairRequest) (response domainApp.PairResponse, err error) {
+	if err = validations.ValidateAppPair(ctx, request); err != nil {
+		return response, err
+	}
+
+	if service.WaCli == nil {
+		return response, pkgError.ErrWaCLI
+	}
+
+	if service.WaCli.IsLoggedIn() {
+		return response, pkgError.ErrAlreadyLoggedIn
+	}
+
+	linkingCode, err := service.WaCli.PairPhone(request.Phone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+	if err != nil {
+		if errors.Is(err, whatsmeow.ErrNotConnected) {
+			_ = service.WaCli.Connect()
+		}
+
+		logger.Error("Error when pair to whatsapp", err)
+		return response, err
+	}
+
+	response.LinkingCode = linkingCode
 
 	return response, nil
 }
